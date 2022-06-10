@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  redis:
+    build: ./redis
+    container_name: redis-backend
+    networks:
+     - production-boilerplate
+    ports:
+     - "6379:6379"
+networks:
+  production-boilerplate:
+    driver: bridge
