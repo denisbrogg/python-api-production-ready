@@ -5,9 +5,18 @@ services:
     build: ./redis
     container_name: redis-backend
     networks:
-     - production-boilerplate
+      - production-boilerplate
     ports:
-     - "6379:6379"
+      - "6379:6379"
+  rabbitmq:
+    build: ./rabbit-mq
+    container_name: rabbitmq-broker
+    networks:
+      - production-boilerplate
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
 networks:
   production-boilerplate:
     driver: bridge
