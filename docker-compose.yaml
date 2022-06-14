@@ -1,6 +1,7 @@
 version: "3"
 
 services:
+  # RESULTS BACKEND
   redis:
     build: ./redis
     container_name: redis-backend
@@ -8,6 +9,8 @@ services:
       - production-boilerplate
     ports:
       - "6379:6379"
+
+  # BROKER
   rabbitmq:
     build: ./rabbit-mq
     container_name: rabbitmq-broker
@@ -16,6 +19,59 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  # WORKER
+  celery:
+    build: ./fast-api-celery
+    image: fast-api-celery
+    container_name: celery-worker
+    networks:
+      - production-boilerplate
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
+      - CELERY_QUEUE=${CELERY_QUEUE}
+    command: ./starter.sh --which worker
+    depends_on:
+      - redis
+      - rabbitmq
+    # command: celery --broker amqp://guest@rabbitmq// --result-backend redis://redis:6379/0 -A worker worker --loglevel=INFO --queues test
+
+  # MONITOR
+  flower:
+    image: fast-api-celery
+    container_name: celery-flower
+    networks:
+      - production-boilerplate
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
+    command: ./starter.sh --which flower
+    # command: celery --broker amqp://guest@rabbitmq// --result-backend redis://redis:6379/0 -A worker flower --loglevel=INFO --queues test
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - rabbitmq
+      - celery
+
+  # API
+  fastapi:
+    image: fast-api-celery
+    container_name: fastapi
+    networks:
+      - production-boilerplate
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
+    command: ./starter.sh --which fastapi
+    # command: celery --broker amqp://guest@rabbitmq// --result-backend redis://redis:6379/0 -A worker flower --loglevel=INFO --queues test
+    ports:
+      - "8000:80"
+    depends_on:
+      - redis
+      - rabbitmq
+      - celery
 
 networks:
   production-boilerplate:
