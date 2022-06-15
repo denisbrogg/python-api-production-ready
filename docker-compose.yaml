@@ -1,6 +1,13 @@
 version: "3"
 
 services:
+  _python_image_build:
+    build:
+      context: ./fast-api-celery
+      dockerfile: Dockerfile.base
+    image: fast-api-celery-base
+    command: ["echo", "build completed"] # any linux command which directly terminates.
+
   # RESULTS BACKEND
   redis:
     build: ./redis
@@ -22,8 +29,10 @@ services:
 
   # WORKER
   celery:
-    build: ./fast-api-celery
-    image: fast-api-celery
+    build:
+      context: ./fast-api-celery
+      dockerfile: Dockerfile.custom
+    image: fast-api-celery-custom
     container_name: celery-worker
     networks:
       - production-boilerplate
@@ -31,21 +40,21 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
       - CELERY_QUEUE=${CELERY_QUEUE}
-    command: ./starter.sh --which worker
+    command: ./starter.sh --target worker
     depends_on:
       - redis
       - rabbitmq
 
   # MONITOR
   flower:
-    image: fast-api-celery
+    image: fast-api-celery-custom
     container_name: celery-flower
     networks:
       - production-boilerplate
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
-    command: ./starter.sh --which flower
+    command: ./starter.sh --target flower
     ports:
       - "5555:5555"
     depends_on:
@@ -55,14 +64,14 @@ services:
 
   # API
   fastapi:
-    image: fast-api-celery
+    image: fast-api-celery-custom
     container_name: fastapi
     networks:
       - production-boilerplate
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_BACKEND_URL=${CELERY_BACKEND_URL}
-    command: ./starter.sh --which fastapi
+    command: ./starter.sh --target fastapi
     ports:
       - "8000:80"
     depends_on:

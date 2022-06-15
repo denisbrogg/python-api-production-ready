@@ -1,0 +1,15 @@
+#
+# Customizations
+#
+
+FROM fast-api-celery-base
+
+WORKDIR /app
+RUN mkdir api worker logic
+COPY api ./api
+COPY worker ./worker
+COPY logic ./logic
+COPY starter.sh .
+RUN chmod +x starter.sh
+
+ENTRYPOINT ["/bin/bash"]

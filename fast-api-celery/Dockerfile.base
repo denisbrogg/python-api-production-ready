@@ -22,18 +22,3 @@ FROM python:3.9-slim-bullseye AS runtime
 WORKDIR /app
 COPY --from=builder /app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-#
-# Customizations
-#
-
-FROM runtime AS custom-runtime
-
-WORKDIR /app
-RUN mkdir api worker
-COPY api ./api
-COPY worker ./worker
-COPY starter.sh .
-RUN chmod +x starter.sh
-
-ENTRYPOINT ["/bin/bash"]
