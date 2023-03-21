@@ -8,10 +8,11 @@ WORKDIR /app
 COPY . .
 
 RUN apt update -y && apt upgrade -y && apt install curl -y
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-RUN $HOME/.poetry/bin/poetry config virtualenvs.create false 
-RUN $HOME/.poetry/bin/poetry install --no-dev 
-RUN $HOME/.poetry/bin/poetry export -f requirements.txt >> requirements.txt
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python -
+ENV PATH=/opt/poetry/bin:$PATH
+RUN poetry config virtualenvs.create false 
+RUN poetry install --no-dev 
+RUN poetry export -f requirements.txt >> requirements.txt
 
 #
 # Prod image
